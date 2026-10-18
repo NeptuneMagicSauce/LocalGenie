@@ -380,12 +380,12 @@ The script [genie_choose_default_model](../scripts/genie_choose_default_model) p
 
 # X. TODO
 
-[*] hide external providers
-[*] share an agentic-workspace dir between all
-[*] put some of this content in dedicated files, the content we need to re-run
-[*] after registering models, prompt for default with fzf
-[ ] save favorite models, they are lost on container restart
-[ ] set verbose
-[ ] customize context size per model
-[ ] find a few models that fit in VRAM
-[ ] test the models with the prompt for the CatPi bug fix
+- [x] hide external providers
+- [x] share an agentic-workspace dir between all
+- [x] put some of this content in dedicated files, the content we need to re-run
+- [x] after registering models, prompt for default with fzf
+- [ ] save favorite models, they are lost on container restart
+- [ ] set verbose
+- [ ] customize context size per model
+- [ ] find a few models that fit in VRAM
+- [ ] test the models with the prompt for the CatPi bug fix
