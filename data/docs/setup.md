@@ -2,7 +2,7 @@
 
 # setting up a local agent
 
-## 1. dedicated WSL instance
+## 1. dedicated WSL instance `AgentHost`
 
 ```bash
 wsl.exe --install -d Debian --name AgentHost
@@ -12,26 +12,29 @@ wsl.exe -d AgentHost
 Remove its auto-mounts, make sure it has systemd in `/etc/wsl.conf`:
 
 ```bash
-sudo passwd -d $USER # remove user password
-sudo apt update
-sudo apt install ca-certificates curl jq
 sudo tee /etc/wsl.conf <<EOF
 [boot]
 systemd=true
 
 [automount]
-root = /
-options = "metadata"
+enabled = false
 mountFsTab = false
 EOF
 
+sudo passwd -d $USER # remove user password
+sudo apt update
+sudo apt install ca-certificates curl jq fzf
+
 wsl.exe --terminate AgentHost # reboot
-wsl.exe -d AgentHost
 ```
 
-## 2. docker
+## 2. Docker
+
+In the `AgentHost` WSL:
 
 ```bash
+wsl.exe -d AgentHost
+
 sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 
 sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
@@ -82,9 +85,9 @@ docker images
 docker image rm $ID
 ```
 
-## 4. ollama
+## 4. Ollama
 
-inference server
+An inference server.
 
 ```bash
 mkdir ~/ollama
@@ -121,25 +124,33 @@ EOF
 docker compose up -d
 ```
 
-it is setup to be auto-started with the wsl instance
+It is now setup to be auto-started with the wsl instance, using systemd.
 
-## 5. start and stop
+## 5. Start, Stop, release VRAM
 
-### START
+### Start
 
 ```bash
 wsl.exe -d AgentHost true
 ```
 
-### STOP
+### Stop
 
 ```bash
 wsl.exe --terminate AgentHost
 ```
 
-## 6. models
+### Release VRAM
 
-### hugging face CLI
+Without stopping everything.
+
+```bash
+docker restart ollama
+```
+
+## 6. Models
+
+### Hugging Face CLI (optional)
 
 for browsing
 
@@ -149,76 +160,102 @@ curl -LsSf https://hf.co/cli/install.sh | bash
 hf models ls --num-parameters "min:6B,max:16B" --search "code" --sort downloads
 
 hf models list Qwen/Qwen2.5-Coder-14B-Instruct-GGUF
-
-ollama pull qwen2.5-coder:14b-instruct-q5_K_M
-hf.co/Qwen/Qwen2.5-Coder-14B-Instruct-GGUF:Q4_K_M
-
-ollama pull qwen3:14b
 ```
 
-## 7. opencode
+### Install some models
 
-it's the agentic harness
+For example:
 
-### bare-metal (inside the WSL dedicated instance) -> NO
-
+```bash
+ollama pull hf.co/mradermacher/Qwen3.8-14B-Instruct-Turbo-GGUF:Q4_K_M
+ollama pull hf.co/unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:IQ4_XS
+ollama pull hf.co/unsloth/Qwen3.8-27B-GGUF:UD-IQ3_S
 ```
-curl -fsSL https://opencode.ai/install | bash
+
+### 7. Share a directory
+
+The personal WSL owns a workspace directory, which has this repository and the other repositories we want to work on.
+
+Let's not use `/etc/fstab` because it prints this error when starting WSL:
+> wsl: Processing /etc/fstab with mount -a failed.
+Root cause: auto-mount fstab runs before `/wsl` is ready.
+
+Let's not use systemd because its syntax is too verbose.
+
+We will use `.bashrc` or `.bash_local` or `.profile`, choose what works for you.
+
+#### In the host: personal WSL
+
+```bash
+WORKSPACE=~/workspace/WorkspaceForAgents/
+DEST=/wsl/WorkspaceForAgents
+RCFILE=~/.bashrc # customize here
+
+mkdir -p $WORKSPACE
+mkdir -p $DEST
+
+cat >> $RCFILE << EOF
+
+# mount bind for sharing Agent Workspace
+if ! mountpoint -q $DEST ; then
+  sudo mount --bind $WORKSPACE $DEST
+fi
+EOF
+
+source $RCFILE
 ```
 
-then, run opencode, type command `/models`, and see this model is listed at the bottom of the list
+#### In the AgentHost WSL
 
-direct launch ollama -> opencode, !! can not work when ollama is containerized but opencode is not
+
+```bash
+WORKSPACE=/wsl/WorkspaceForAgents
+DEST=/workspace
+RCFILE=~/.profile
+
+sudo mkdir -p $DEST
+
+cat >> $RCFILE << EOF
+
+# mount bind for sharing Agent Workspace
+if ! mountpoint -q $DEST; then
+  sudo mount --bind $WORKSPACE $DEST
+fi
+EOF
+
+source $RCFILE
+```
+
+## 8. OpenCode
+
+It is the agentic harness.
+
+### Bare-Metal (inside the WSL dedicated instance) -> NO
+
+Important security point: we are not installing the agentic harness in the personal WSL, nor in the Windows host. It belongs in the dedicated WSL instance, and then further isolated in a docker container. The installation command is found in the `Dockerfile`.
+
+Direct launch ollama -> opencode: it can not work when ollama and opencode are in different containers, they do not see each other.
 ```
 ollama ollama launch opencode
 ```
 
-### test ollama API
+### Test Ollama API
 Hit the ollama API:
-/v1 is OpenAI API
-/api is ollama native AIP
 ```
-curl -s http://127.0.0.1:11434/v1/tags | jq
-curl -s http://127.0.0.1:11434/api/tags | jq
-curl -s http://127.0.0.1:11434/v1/models | jq
+curl -s http://127.0.0.1:11434/api/tags  | jq  # api is OpenCode schema
+curl -s http://127.0.0.1:11434/v1/models | jq  # v1 is OpenAI schema
 ```
 
-### configure model(s) from ollama
-`~/.config/opencode/opencode.json` like this:
-
-```bash
-mkdir -p ~/.config/opencode
-cat << 'EOF' > ~/.config/opencode/opencode.json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama",
-      "options": {
-        "baseURL": "http://127.0.0.1:11434/v1"
-      },
-      "models": {
-        "qwen3:14b": {
-          "name": "qwen3-14b"
-        }
-      }
-    }
-  }
-}
-EOF
-```
-
-### containerized
+### Containerized in a Docker container
 
 put this in `Dockerfile`:
 ```
 FROM debian:bookworm-slim
 
-# Prevent interactive prompts during apt operations
+ # prevent interactive prompts for apt
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies in a single layer and clear apt caches immediately
+ # install dependencies and clear apt cache
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
@@ -229,10 +266,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install OpenCode binary
+ # install OpenCode
 RUN curl -fsSL https://opencode.ai/install | bash
 
-# Ensure OpenCode is available in system PATH
+ # add to PATH
 ENV PATH="/root/.opencode/bin:${PATH}"
 
 WORKDIR /workspace
@@ -249,52 +286,22 @@ run it:
 ```
 docker run -it --rm \
   --network=host \
-  -v ~/workspace:/workspace \
   -v ~/.config/opencode:/root/.config/opencode \
   -v ~/.local/share/opencode:/root/.local/share/opencode \
+  -v /workspace:/workspace \
   opencode-agent:debian \
   $@
 ```
-It needs outside directories for the config and the state, to save sessions.
 
-### auto-discover models
+It needs outside directories for the config, the state (to save sessions) and the repositories.
 
-I can not get opencode to auto discover the local ollama models.
+### Auto-discover models
+
+I can not get OpenCode to auto discover the local Ollama models.
 
 Here's how to update the model list from the API call:
 
-#### from endpoint `/v1/models`
-
-```bash
-#!/usr/bin/env bash
-
-curl -s http://localhost:11434/v1/models | jq '{
-  "$schema": "https://opencode.ai/config.json",
-  "disabled_providers": [
-    "opencode"
-  ],
-  "provider": {
-    "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama",
-      "options": {
-        "baseURL": "http://localhost:11434/v1"
-      },
-      "models": (
-        [ .data[] | {
-            key: .id,
-            value: {
-              name: (.id | sub("^(?:[^/]+/){2}"; "") | sub("-GGUF"; ""))
-            }
-          }
-        ] | from_entries
-      )
-    }
-  }
-}'
-```
-
-#### from endpoint `/api/tags` which has the size:
+#### From endpoint `/api/tags` which has the size:
 
 ```bash
 #!/usr/bin/env bash
@@ -328,7 +335,7 @@ curl -s http://localhost:11434/api/tags | jq '{
 }'
 ```
 
-#### update the list like this:
+#### Update the list like this:
 
 ```
 curl ... |& tee ~/.config/opencode/opencode.json | jq
@@ -340,12 +347,12 @@ verify:
 jq '.provider.ollama.models[].name' ~/.config/opencode/opencode.json
 ```
 
-## 8. TODO
+## X. TODO
 
-[ ] put all this content in dedicated files
-[ ] make it more convenient for starting and choosing models
-[ ] always prompt for model on start?
 [*] hide external providers
+[*] share an agentic-workspace dir between all
+[ ] put all this content in dedicated files
+[ ] after registering models, prompt for default with fzf
 [ ] save favorite models, they are lost on container restart
 [ ] set verbose
 [ ] customize context size per model
