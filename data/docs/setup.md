@@ -338,11 +338,9 @@ curl -s http://127.0.0.1:11434/v1/models | jq  # v1 is OpenAI schema
 
 ## Convert `/api/tags` to `opencode.json`
 
-The script [genie_update_models](../scripts/genie_update_models) updates the list of models returned by Ollama, into `opencode.json`. Run it after you change the list of models (ollama pull|rm).
+This `jq` invocation converts the API return into data for `opencode.json`:
 
 ```bash
-#!/usr/bin/env bash
-
 curl -s http://localhost:11434/api/tags | jq '{
   "$schema": "https://opencode.ai/config.json",
   "disabled_providers": [
@@ -369,8 +367,16 @@ curl -s http://localhost:11434/api/tags | jq '{
       )
     }
   }
-}' > ~/.config/opencode/opencode.json
+}'
 ```
+
+## Helper script: update models
+
+The script [genie_update_models](../scripts/genie_update_models) updates the list of models returned by Ollama, saves them into `opencode.json`. Run it after you change the list of models (ollama pull|rm).
+
+## Helper script: choose default model
+
+The script [genie_choose_default_model](../scripts/genie_choose_default_model) prompts for the default model among the installed models, and saves it into `opencode.json`.
 
 # X. TODO
 

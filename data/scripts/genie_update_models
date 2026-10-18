@@ -31,23 +31,6 @@ curl -s http://localhost:11434/api/tags | jq '{
     }
   }
 }' > $CONFIG_FILE
-
-count=$(jq '.provider.ollama.models | length' "$CONFIG_FILE")
-height=$(( count + 2 ))
-echo "🧞‍♂️ Wish granted"
-
-selection=$(jq -r '.provider.ollama.models | to_entries[] | "\(.value.name)\t\(.key)"' "$CONFIG_FILE" | \
-  fzf --height=~100% \
-      --header="Choose default model" \
-      --reverse \
-      --delimiter=$'\t' \
-      --with-nth=1)
-
-if [ -n "$selection" ] ; then
-    friendly_name=$(echo "$selection" | cut -d$'\t' -f1)
-    selected_key=$(echo "$selection" | cut -d$'\t' -f2)
-
-    tmp_file=$(mktemp)
-    jq --arg model "ollama/$selected_key" '.model = $model' "$CONFIG_FILE" > "$tmp_file" && mv "$tmp_file" "$CONFIG_FILE"
-    echo "Set default model to: $friendly_name"
-fi
+echo "🧞‍♂️ Wish granted: models updated in OpenCode"
+jq '.provider.ollama.models[].name' $CONFIG_FILE
+echo "Choose the default model with genie_choose_default_model"
