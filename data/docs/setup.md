@@ -270,6 +270,9 @@ Here's how to update the model list from the API call:
 
 curl -s http://localhost:11434/v1/models | jq '{
   "$schema": "https://opencode.ai/config.json",
+  "disabled_providers": [
+    "opencode"
+  ],
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
@@ -298,6 +301,9 @@ curl -s http://localhost:11434/v1/models | jq '{
 
 curl -s http://localhost:11434/api/tags | jq '{
   "$schema": "https://opencode.ai/config.json",
+  "disabled_providers": [
+    "opencode"
+  ],
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
@@ -336,9 +342,12 @@ jq '.provider.ollama.models[].name' ~/.config/opencode/opencode.json
 
 ## 8. TODO
 
+[ ] put all this content in dedicated files
 [ ] make it more convenient for starting and choosing models
-    maybe always prompt for model on start
-    propose the local ollama models at top, before the OpenCodeZen section
+[ ] always prompt for model on start?
+[*] hide external providers
+[ ] save favorite models, they are lost on container restart
+[ ] set verbose
 [ ] customize context size per model
 [ ] find a few models that fit in VRAM
 [ ] test the models with the prompt for the CatPi bug fix
