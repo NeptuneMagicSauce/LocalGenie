@@ -11,7 +11,11 @@ wsl.exe -d AgentHost
 
 Remove its auto-mounts, make sure it has systemd in `/etc/wsl.conf`:
 
-```init
+```bash
+sudo passwd -d $USER # remove user password
+sudo apt update
+sudo apt install ca-certificates curl jq
+sudo tee /etc/wsl.conf <<EOF
 [boot]
 systemd=true
 
@@ -19,16 +23,15 @@ systemd=true
 root = /
 options = "metadata"
 mountFsTab = false
-```
+EOF
 
-```bash
-sudo apt update
+wsl.exe --terminate AgentHost # reboot
+wsl.exe -d AgentHost
 ```
 
 ## 2. docker
 
 ```bash
-sudo apt install ca-certificates curl jq
 sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 
 sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
@@ -46,7 +49,9 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin dock
 
 sudo groupadd docker
 sudo usermod -aG docker $USER
-wsl.exe --terminate AgentHost
+
+wsl.exe --terminate AgentHost # reboot
+wsl.exe -d AgentHost
 ```
 
 make sure it works:
@@ -55,7 +60,7 @@ make sure it works:
 systemctl status docker
 docker run hello-world
 docker images
-docker image rm $ID...
+docker image rm $ID
 ```
 
 ## 3. nvidia-container-toolkit
@@ -73,7 +78,8 @@ make sure it works:
 
 ```bash
 docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu22.04 nvidia-smi
-docker image rm ...
+docker images
+docker image rm $ID
 ```
 
 ## 4. ollama
@@ -314,3 +320,19 @@ curl -s http://localhost:11434/api/tags | jq '{
 ```
 curl ... |& tee ~/.config/opencode/opencode.json | jq
 ```
+
+verify:
+
+```
+jq '.provider.ollama.models[].name' ~/.config/opencode/opencode.json
+```
+
+## 8. TODO
+
+[ ] make it more convenient for starting and choosing models
+    maybe always prompt for model on start
+    propose the local ollama models at top, before the OpenCodeZen section
+[ ] find back sessions, it fails to find the previous sessions
+[ ] customize context size per model
+[ ] find a few models that fit in VRAM
+[ ] test the models with the prompt for the CatPi bug fix
