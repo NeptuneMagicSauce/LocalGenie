@@ -1,8 +1,10 @@
 ![Local Genie](../images/local.genie.png)
 
-# setting up a local agent
+# Setting up a local agent
 
-## 1. dedicated WSL instance `AgentHost`
+Prerequisites: a Windows machine with WSL.
+
+# 1. A dedicated WSL instance `AgentHost`
 
 ```bash
 wsl.exe --install -d Debian --name AgentHost
@@ -28,7 +30,63 @@ sudo apt install ca-certificates curl jq fzf
 wsl.exe --terminate AgentHost # reboot
 ```
 
-## 2. Docker
+# 1. Share a directory
+
+The personal WSL owns a workspace directory, which has this repository and the other repositories we want to work on.
+
+Let's not use `/etc/fstab` because it prints this error when starting WSL:
+> wsl: Processing /etc/fstab with mount -a failed.
+Root cause: auto-mount fstab runs before `/wsl` is ready.
+
+Let's not use systemd because its syntax is too verbose.
+
+We will use `.bashrc` or `.bash_local` or `.profile`, choose what works for you.
+
+## In the host: personal WSL
+
+```bash
+WORKSPACE=~/workspace/WorkspaceForAgents/
+DEST=/wsl/WorkspaceForAgents
+RCFILE=~/.bashrc # customize here
+
+mkdir -p $WORKSPACE
+mkdir -p $DEST
+
+cat >> $RCFILE << EOF
+
+ # mount bind for sharing Agent Workspace
+if ! mountpoint -q $DEST ; then
+  sudo mount --bind $WORKSPACE $DEST
+fi
+EOF
+
+source $RCFILE
+```
+
+## In the AgentHost WSL
+
+
+```bash
+WORKSPACE=/wsl/WorkspaceForAgents
+DEST=/workspace
+RCFILE=~/.profile
+
+sudo mkdir -p $DEST
+
+cat >> $RCFILE << EOF
+
+ # mount bind for sharing Agent Workspace
+if ! mountpoint -q $DEST; then
+  sudo mount --bind $WORKSPACE $DEST
+fi
+EOF
+
+source $RCFILE
+```
+
+
+
+# 1. Docker
 
 In the `AgentHost` WSL:
 
@@ -66,7 +124,7 @@ docker images
 docker image rm $ID
 ```
 
-## 3. nvidia-container-toolkit
+# 1. nvidia-container-toolkit
 
 ```bash
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg   && curl -s -L https://nvidia.github.io/libnvidia-container/experimental/deb/nvidia-container-toolkit.list |     sed 's#deb [^ ]* #&[signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] #' |     sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
@@ -85,7 +143,7 @@ docker images
 docker image rm $ID
 ```
 
-## 4. Ollama
+# 1. Ollama
 
 An inference server.
 
@@ -126,31 +184,37 @@ docker compose up -d
 
 It is now setup to be auto-started with the wsl instance, using systemd.
 
-## 5. Start, Stop, release VRAM
+# 1. Start, Stop, release VRAM
 
-### Start
+## Start
 
 ```bash
 wsl.exe -d AgentHost true
 ```
 
-### Stop
+## Stop
 
 ```bash
 wsl.exe --terminate AgentHost
 ```
 
-### Release VRAM
+## Release VRAM only
 
-Without stopping everything.
+For gaming, without stopping everything.
 
+From personal WSL:
+```bash
+wsl.exe -d AgentHost docker restart ollama
+```
+
+From `AgentHost` WSL:
 ```bash
 docker restart ollama
 ```
 
-## 6. Models
+# 1. Models
 
-### Hugging Face CLI (optional)
+## Hugging Face CLI (optional)
 
 for browsing
 
@@ -162,7 +226,7 @@ hf models ls --num-parameters "min:6B,max:16B" --search "code" --sort downloads
 hf models list Qwen/Qwen2.5-Coder-14B-Instruct-GGUF
 ```
 
-### Install some models
+## Install some models
 
 For example:
 
@@ -172,83 +236,26 @@ ollama pull hf.co/unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:IQ4_XS
 ollama pull hf.co/unsloth/Qwen3.8-27B-GGUF:UD-IQ3_S
 ```
 
-### 7. Share a directory
-
-The personal WSL owns a workspace directory, which has this repository and the other repositories we want to work on.
-
-Let's not use `/etc/fstab` because it prints this error when starting WSL:
-> wsl: Processing /etc/fstab with mount -a failed.
-Root cause: auto-mount fstab runs before `/wsl` is ready.
-
-Let's not use systemd because its syntax is too verbose.
-
-We will use `.bashrc` or `.bash_local` or `.profile`, choose what works for you.
-
-#### In the host: personal WSL
-
-```bash
-WORKSPACE=~/workspace/WorkspaceForAgents/
-DEST=/wsl/WorkspaceForAgents
-RCFILE=~/.bashrc # customize here
-
-mkdir -p $WORKSPACE
-mkdir -p $DEST
-
-cat >> $RCFILE << EOF
-
-# mount bind for sharing Agent Workspace
-if ! mountpoint -q $DEST ; then
-  sudo mount --bind $WORKSPACE $DEST
-fi
-EOF
-
-source $RCFILE
-```
-
-#### In the AgentHost WSL
-
-
-```bash
-WORKSPACE=/wsl/WorkspaceForAgents
-DEST=/workspace
-RCFILE=~/.profile
-
-sudo mkdir -p $DEST
-
-cat >> $RCFILE << EOF
-
-# mount bind for sharing Agent Workspace
-if ! mountpoint -q $DEST; then
-  sudo mount --bind $WORKSPACE $DEST
-fi
-EOF
-
-source $RCFILE
-```
-
-## 8. OpenCode
+# 1. OpenCode
 
 It is the agentic harness.
 
-### Bare-Metal (inside the WSL dedicated instance) -> NO
+## Bare-Metal -> NO
 
-Important security point: we are not installing the agentic harness in the personal WSL, nor in the Windows host. It belongs in the dedicated WSL instance, and then further isolated in a docker container. The installation command is found in the `Dockerfile`.
+Important security point: we are not installing the agentic harness in the personal WSL, nor in the Windows host. It belongs in the dedicated WSL instance, and then further isolated in a docker container.
 
-Direct launch ollama -> opencode: it can not work when ollama and opencode are in different containers, they do not see each other.
-```
-ollama ollama launch opencode
-```
+The actual installation command is found in the `Dockerfile`.
 
-### Test Ollama API
-Hit the ollama API:
+Corollary: directly launching ollama through opencode or vice versa can not work when ollama and opencode are in different containers, they do not see each other.
 ```
-curl -s http://127.0.0.1:11434/api/tags  | jq  # api is OpenCode schema
-curl -s http://127.0.0.1:11434/v1/models | jq  # v1 is OpenAI schema
+ollama ollama launch opencode # can not work
 ```
 
-### Containerized in a Docker container
+## Containerized in a Docker container
 
-put this in `Dockerfile`:
+And inside the WSL dedicated instance.
+
+Put this in `Dockerfile`:
 ```
 FROM debian:bookworm-slim
 
@@ -295,13 +302,20 @@ docker run -it --rm \
 
 It needs outside directories for the config, the state (to save sessions) and the repositories.
 
-### Auto-discover models
+## Auto-discover models
 
 I can not get OpenCode to auto discover the local Ollama models.
 
 Here's how to update the model list from the API call:
 
-#### From endpoint `/api/tags` which has the size:
+## Test Ollama API
+Hit the ollama API:
+```
+curl -s http://127.0.0.1:11434/api/tags  | jq  # api is OpenCode schema
+curl -s http://127.0.0.1:11434/v1/models | jq  # v1 is OpenAI schema
+```
+
+## Convert `/api/tags` to `opencode.json`
 
 ```bash
 #!/usr/bin/env bash
@@ -335,7 +349,7 @@ curl -s http://localhost:11434/api/tags | jq '{
 }'
 ```
 
-#### Update the list like this:
+## Update the list like this:
 
 ```
 curl ... |& tee ~/.config/opencode/opencode.json | jq
@@ -347,7 +361,7 @@ verify:
 jq '.provider.ollama.models[].name' ~/.config/opencode/opencode.json
 ```
 
-## X. TODO
+# 1. TODO
 
 [*] hide external providers
 [*] share an agentic-workspace dir between all
