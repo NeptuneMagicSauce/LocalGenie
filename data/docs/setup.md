@@ -247,8 +247,15 @@ docker build -t opencode-agent:debian .
 
 run it:
 ```
-docker run -it --rm   --network=host   -v ~/workspace:/workspace   -v ~/.config/opencode:/root/.config/opencode   opencode-agent:debian
+docker run -it --rm \
+  --network=host \
+  -v ~/workspace:/workspace \
+  -v ~/.config/opencode:/root/.config/opencode \
+  -v ~/.local/share/opencode:/root/.local/share/opencode \
+  opencode-agent:debian \
+  $@
 ```
+It needs outside directories for the config and the state, to save sessions.
 
 ### auto-discover models
 
@@ -332,7 +339,6 @@ jq '.provider.ollama.models[].name' ~/.config/opencode/opencode.json
 [ ] make it more convenient for starting and choosing models
     maybe always prompt for model on start
     propose the local ollama models at top, before the OpenCodeZen section
-[ ] find back sessions, it fails to find the previous sessions
 [ ] customize context size per model
 [ ] find a few models that fit in VRAM
 [ ] test the models with the prompt for the CatPi bug fix
