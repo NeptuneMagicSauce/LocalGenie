@@ -177,7 +177,7 @@ curl -s http://127.0.0.1:11434/api/tags | jq
 curl -s http://127.0.0.1:11434/v1/models | jq
 ```
 
-### configure model(s) from ollam
+### configure model(s) from ollama
 `~/.config/opencode/opencode.json` like this:
 
 ```bash
@@ -242,4 +242,75 @@ docker build -t opencode-agent:debian .
 run it:
 ```
 docker run -it --rm   --network=host   -v ~/workspace:/workspace   -v ~/.config/opencode:/root/.config/opencode   opencode-agent:debian
+```
+
+### auto-discover models
+
+I can not get opencode to auto discover the local ollama models.
+
+Here's how to update the model list from the API call:
+
+#### from endpoint `/v1/models`
+
+```bash
+#!/usr/bin/env bash
+
+curl -s http://localhost:11434/v1/models | jq '{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": (
+        [ .data[] | {
+            key: .id,
+            value: {
+              name: (.id | sub("^(?:[^/]+/){2}"; "") | sub("-GGUF"; ""))
+            }
+          }
+        ] | from_entries
+      )
+    }
+  }
+}'
+```
+
+#### from endpoint `/api/tags` which has the size:
+
+```bash
+#!/usr/bin/env bash
+
+curl -s http://localhost:11434/api/tags | jq '{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": (
+        [ .models[] | {
+            key: .model,
+            value: {
+              name: (
+                (.model | sub("^(?:[^/]+/){2}"; "") | sub("-GGUF"; "")) +
+                " (" + ((.size / 1000000000 | floor) | tostring) + " GB)"
+              )
+            }
+          }
+        ] | from_entries
+      )
+    }
+  }
+}'
+```
+
+#### update the list like this:
+
+```
+curl ... |& tee ~/.config/opencode/opencode.json | jq
 ```
