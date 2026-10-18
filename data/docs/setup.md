@@ -4,7 +4,7 @@
 
 Prerequisites: a Windows machine with WSL.
 
-# 1. A dedicated WSL instance `AgentHost`
+1. A dedicated WSL instance `AgentHost`
 
 ```bash
 wsl.exe --install -d Debian --name AgentHost
@@ -30,7 +30,7 @@ sudo apt install ca-certificates curl jq fzf
 wsl.exe --terminate AgentHost # reboot
 ```
 
-# 1. Share a directory
+1. Share a directory
 
 The personal WSL owns a workspace directory, which has this repository and the other repositories we want to work on.
 
@@ -86,7 +86,7 @@ source $RCFILE
 
 
 
-# 1. Docker
+1. Docker
 
 In the `AgentHost` WSL:
 
@@ -124,7 +124,7 @@ docker images
 docker image rm $ID
 ```
 
-# 1. nvidia-container-toolkit
+1. nvidia-container-toolkit
 
 ```bash
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg   && curl -s -L https://nvidia.github.io/libnvidia-container/experimental/deb/nvidia-container-toolkit.list |     sed 's#deb [^ ]* #&[signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] #' |     sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
@@ -143,7 +143,7 @@ docker images
 docker image rm $ID
 ```
 
-# 1. Ollama
+1. Ollama
 
 An inference server.
 
@@ -184,7 +184,7 @@ docker compose up -d
 
 It is now setup to be auto-started with the wsl instance, using systemd.
 
-# 1. Start, Stop, release VRAM
+1. Start, Stop, release VRAM
 
 ## Start
 
@@ -212,7 +212,7 @@ From `AgentHost` WSL:
 docker restart ollama
 ```
 
-# 1. Models
+1. Models
 
 ## Hugging Face CLI (optional)
 
@@ -236,7 +236,7 @@ ollama pull hf.co/unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:IQ4_XS
 ollama pull hf.co/unsloth/Qwen3.8-27B-GGUF:UD-IQ3_S
 ```
 
-# 1. OpenCode
+1. OpenCode
 
 It is the agentic harness.
 
@@ -361,7 +361,7 @@ verify:
 jq '.provider.ollama.models[].name' ~/.config/opencode/opencode.json
 ```
 
-# 1. TODO
+1. TODO
 
 [*] hide external providers
 [*] share an agentic-workspace dir between all
