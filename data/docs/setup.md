@@ -4,7 +4,7 @@
 
 Prerequisites: a Windows machine with WSL.
 
-1. A dedicated WSL instance `AgentHost`
+# 1. A dedicated WSL instance `AgentHost`
 
 ```bash
 wsl.exe --install -d Debian --name AgentHost
@@ -30,7 +30,7 @@ sudo apt install ca-certificates curl jq fzf
 wsl.exe --terminate AgentHost # reboot
 ```
 
-1. Share a directory
+# 2. Share a directory
 
 The personal WSL owns a workspace directory, which has this repository and the other repositories we want to work on.
 
@@ -84,11 +84,25 @@ EOF
 source $RCFILE
 ```
 
+### Clone this repository to access the automation scripts
 
+```
+cd /workspace
+git clone https://github.com/NeptuneMagicSauce/LocalGenie.git
+```
 
-1. Docker
+### Add this repository scripts to the PATH
 
-In the `AgentHost` WSL:
+```
+cat >> ~/.profile << EOF
+PATH=/workspace/LocalGenie/data/scripts:\$PATH
+EOF
+source ~/.profile
+```
+
+# 3. Docker
+
+In the `AgentHost` WSL, install it with the [official instructions](https://docs.docker.com/engine/install/debian/#install-using-the-repository):
 
 ```bash
 wsl.exe -d AgentHost
@@ -124,7 +138,9 @@ docker images
 docker image rm $ID
 ```
 
-1. nvidia-container-toolkit
+# 4. nvidia-container-toolkit
+
+In the `AgentHost` WSL, install it with the [official instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#with-apt-ubuntu-debian):
 
 ```bash
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg   && curl -s -L https://nvidia.github.io/libnvidia-container/experimental/deb/nvidia-container-toolkit.list |     sed 's#deb [^ ]* #&[signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] #' |     sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
@@ -135,7 +151,7 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
-make sure it works:
+Make sure it works:
 
 ```bash
 docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu22.04 nvidia-smi
@@ -143,12 +159,12 @@ docker images
 docker image rm $ID
 ```
 
-1. Ollama
+# 5. Ollama
 
-An inference server.
+The inference server, installed in a docker container, in the `AgentHost` WSL:
 
 ```bash
-mkdir ~/ollama
+mkdir -p ~/ollama
 cd ~/ollama
 cat > docker-compose.yml << EOF
 services:
@@ -182,9 +198,9 @@ EOF
 docker compose up -d
 ```
 
-It is now setup to be auto-started with the wsl instance, using systemd.
+It is now setup to be auto-started with the WSL instance, using systemd.
 
-1. Start, Stop, release VRAM
+# 6. Start, Stop, release VRAM
 
 ## Start
 
@@ -212,7 +228,7 @@ From `AgentHost` WSL:
 docker restart ollama
 ```
 
-1. Models
+# 7. Models
 
 ## Hugging Face CLI (optional)
 
@@ -236,7 +252,7 @@ ollama pull hf.co/unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:IQ4_XS
 ollama pull hf.co/unsloth/Qwen3.8-27B-GGUF:UD-IQ3_S
 ```
 
-1. OpenCode
+# 8. OpenCode
 
 It is the agentic harness.
 
@@ -253,10 +269,15 @@ ollama ollama launch opencode # can not work
 
 ## Containerized in a Docker container
 
-And inside the WSL dedicated instance.
+In the `AgentHost` WSL.
 
-Put this in `Dockerfile`:
-```
+```bash
+
+mkdir -p ~/opencode
+cd ~/opencode
+
+cat > Dockerfile << EOF
+
 FROM debian:bookworm-slim
 
  # prevent interactive prompts for apt
@@ -282,14 +303,12 @@ ENV PATH="/root/.opencode/bin:${PATH}"
 WORKDIR /workspace
 
 CMD ["opencode"]
-```
+EOF
 
-build it:
-```
 docker build -t opencode-agent:debian .
 ```
 
-run it:
+Run it:
 ```
 docker run -it --rm \
   --network=host \
@@ -301,6 +320,8 @@ docker run -it --rm \
 ```
 
 It needs outside directories for the config, the state (to save sessions) and the repositories.
+
+The script [opencode](../scripts/opencode) is a helper to run OpenCode from the `AgentHost` WSL.
 
 ## Auto-discover models
 
@@ -316,6 +337,8 @@ curl -s http://127.0.0.1:11434/v1/models | jq  # v1 is OpenAI schema
 ```
 
 ## Convert `/api/tags` to `opencode.json`
+
+The script [genie_update_models](../scripts/genie_update_models) updates the list of models returned by Ollama, into `opencode.json`. Run it after you change the list of models (ollama pull|rm).
 
 ```bash
 #!/usr/bin/env bash
@@ -346,26 +369,20 @@ curl -s http://localhost:11434/api/tags | jq '{
       )
     }
   }
-}'
+}' > ~/.config/opencode/opencode.json
 ```
 
-## Update the list like this:
-
-```
-curl ... |& tee ~/.config/opencode/opencode.json | jq
-```
-
-verify:
+Verify the list of models declared to OpenCode:
 
 ```
 jq '.provider.ollama.models[].name' ~/.config/opencode/opencode.json
 ```
 
-1. TODO
+# X. TODO
 
 [*] hide external providers
 [*] share an agentic-workspace dir between all
-[ ] put all this content in dedicated files
+[*] put some of this content in dedicated files, the content we need to re-run
 [ ] after registering models, prompt for default with fzf
 [ ] save favorite models, they are lost on container restart
 [ ] set verbose

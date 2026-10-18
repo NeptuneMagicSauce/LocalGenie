@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+curl -s http://localhost:11434/api/tags | jq '{
+  "$schema": "https://opencode.ai/config.json",
+  "disabled_providers": [
+    "opencode"
+  ],
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": (
+        [ .models[] | {
+            key: .model,
+            value: {
+              name: (
+                (.model | sub("^(?:[^/]+/){2}"; "") | sub("-GGUF"; "")) +
+                " (" + ((.size / 1000000000 | floor) | tostring) + " GB)"
+              )
+            }
+          }
+        ] | from_entries
+      )
+    }
+  }
+}' > ~/.config/opencode/opencode.json
