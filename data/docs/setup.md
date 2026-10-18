@@ -372,18 +372,12 @@ curl -s http://localhost:11434/api/tags | jq '{
 }' > ~/.config/opencode/opencode.json
 ```
 
-Verify the list of models declared to OpenCode:
-
-```
-jq '.provider.ollama.models[].name' ~/.config/opencode/opencode.json
-```
-
 # X. TODO
 
 [*] hide external providers
 [*] share an agentic-workspace dir between all
 [*] put some of this content in dedicated files, the content we need to re-run
-[ ] after registering models, prompt for default with fzf
+[*] after registering models, prompt for default with fzf
 [ ] save favorite models, they are lost on container restart
 [ ] set verbose
 [ ] customize context size per model
