@@ -271,58 +271,20 @@ ollama ollama launch opencode # can not work
 
 In the `AgentHost` WSL.
 
+Install and/or update:
+
 ```bash
-
-mkdir -p ~/opencode
-cd ~/opencode
-
-cat > Dockerfile << EOF
-
-FROM debian:bookworm-slim
-
- # prevent interactive prompts for apt
-ENV DEBIAN_FRONTEND=noninteractive
-
- # install dependencies and clear apt cache
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    git \
-    grep \
-    ripgrep \
-    jq \
-    git \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
- # install OpenCode
-RUN curl -fsSL https://opencode.ai/install | bash
-
- # add to PATH
-ENV PATH="/root/.opencode/bin:${PATH}"
-
-WORKDIR /workspace
-
-CMD ["opencode"]
-EOF
-
-docker build -t opencode-agent:debian .
+genie_update_opencode
 ```
+
+This script [genie_update_opencode](../scripts/genie_update_opencode) will run `docker build` on this [Dockerfile](../scripts/docker/opencode/Dockerfile), caching the base Debian system and updating OpenCode without caching.
 
 Run it:
-```
-docker run -it --rm \
-  --network=host \
-  -v ~/.config/opencode:/root/.config/opencode \
-  -v ~/.local/state/opencode:/root/.local/state/opencode \
-  -v ~/.local/share/opencode:/root/.local/share/opencode \
-  -v /workspace:/workspace \
-  opencode-agent:debian \
-  $@
+```bash
+opencode
 ```
 
-It needs outside directories for the config/state/share and the repositories.
-
-The script [opencode](../scripts/opencode) is a helper to run OpenCode from the `AgentHost` WSL.
+This script [opencode](../scripts/opencode) runs the OpenCode container, with mount-binds for the relevant directories: config/state/share and the workspace repositories.
 
 ## Auto-discover models
 
@@ -387,7 +349,10 @@ The script [genie_choose_default_model](../scripts/genie_choose_default_model) p
 - [x] after registering models, prompt for default with fzf
 - [x] save favorite models, they are lost on container restart
   persist this: ~/.local/state/opencode
+- [x] have update methods for opencode
+- [ ] have update methods for ollama
 - [ ] set verbose
+- [ ] have small emacs in both AgentHost and opencode container, set it as EDITOR
 - [ ] customize context size per model
 - [ ] find a few models that fit in VRAM
 - [ ] test the models with the prompt for the CatPi bug fix

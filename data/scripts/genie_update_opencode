@@ -1,0 +1,8 @@
+#!/bin/bash
+
+BASEDIR=$(dirname $0)
+cd $(realpath $BASEDIR/docker/opencode)
+
+docker build \
+       --build-arg CACHE_BUST=$(date +%s) \
+       -t opencode-agent:debian .
