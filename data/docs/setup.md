@@ -313,13 +313,14 @@ Run it:
 docker run -it --rm \
   --network=host \
   -v ~/.config/opencode:/root/.config/opencode \
+  -v ~/.local/state/opencode:/root/.local/state/opencode \
   -v ~/.local/share/opencode:/root/.local/share/opencode \
   -v /workspace:/workspace \
   opencode-agent:debian \
   $@
 ```
 
-It needs outside directories for the config, the state (to save sessions) and the repositories.
+It needs outside directories for the config/state/share and the repositories.
 
 The script [opencode](../scripts/opencode) is a helper to run OpenCode from the `AgentHost` WSL.
 
@@ -384,7 +385,8 @@ The script [genie_choose_default_model](../scripts/genie_choose_default_model) p
 - [x] share an agentic-workspace dir between all
 - [x] put some of this content in dedicated files, the content we need to re-run
 - [x] after registering models, prompt for default with fzf
-- [ ] save favorite models, they are lost on container restart
+- [x] save favorite models, they are lost on container restart
+  persist this: ~/.local/state/opencode
 - [ ] set verbose
 - [ ] customize context size per model
 - [ ] find a few models that fit in VRAM

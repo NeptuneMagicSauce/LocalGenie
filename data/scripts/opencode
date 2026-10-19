@@ -3,6 +3,7 @@
 docker run -it --rm \
   --network=host \
   -v ~/.config/opencode:/root/.config/opencode \
+  -v ~/.local/state/opencode:/root/.local/state/opencode \
   -v ~/.local/share/opencode:/root/.local/share/opencode \
   -v /workspace:/workspace \
   opencode-agent:debian \
