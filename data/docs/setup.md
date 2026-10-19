@@ -259,52 +259,9 @@ This script [opencode](../scripts/opencode) runs the OpenCode container, with mo
 
 I can not get OpenCode to auto discover the local Ollama models.
 
-Here's how to update the model list from the API call:
-
-## Test Ollama API
-Hit the ollama API:
-```
-curl -s http://127.0.0.1:11434/api/tags  | jq  # api is OpenCode schema
-curl -s http://127.0.0.1:11434/v1/models | jq  # v1 is OpenAI schema
-```
-
-## Convert `/api/tags` to `opencode.json`
-
-This `jq` invocation converts the API return into data for `opencode.json`:
-
-```bash
-curl -s http://localhost:11434/api/tags | jq '{
-  "$schema": "https://opencode.ai/config.json",
-  "disabled_providers": [
-    "opencode"
-  ],
-  "provider": {
-    "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama",
-      "options": {
-        "baseURL": "http://localhost:11434/v1"
-      },
-      "models": (
-        [ .models[] | {
-            key: .model,
-            value: {
-              name: (
-                (.model | sub("^(?:[^/]+/){2}"; "") | sub("-GGUF"; "")) +
-                " (" + ((.size / 1000000000 | floor) | tostring) + " GB)"
-              )
-            }
-          }
-        ] | from_entries
-      )
-    }
-  }
-}'
-```
-
 ## Helper script: update models
 
-The script [genie_update_models](../scripts/genie_update_models) updates the list of models returned by Ollama, saves them into `opencode.json`. Run it after you change the list of models (ollama pull|rm).
+The script [genie_update_models](../scripts/genie_update_models) updates the list of models returned by Ollama, saves them into `opencode.json`. Run it after you change the list of models (`ollama pull`, `ollama rm`).
 
 ## Helper script: choose default model
 
@@ -315,7 +272,9 @@ The script [genie_choose_default_model](../scripts/genie_choose_default_model) p
 These [settings](../settings/opencode.cli.json) are a good starting point: `permissions: autoaccept` makes sense if and only if the agent is sandboxed.
 
 ```bash
-cp -vi /workspace/LocalGenie/data/settings/opencode.cli.json ~/.config/opencode/cli.json
+cp -vi \
+  /workspace/LocalGenie/data/settings/opencode.cli.json \
+  ~/.config/opencode/cli.json
 ```
 
 # X. TODO
