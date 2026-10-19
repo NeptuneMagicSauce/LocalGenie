@@ -310,6 +310,14 @@ The script [genie_update_models](../scripts/genie_update_models) updates the lis
 
 The script [genie_choose_default_model](../scripts/genie_choose_default_model) prompts for the default model among the installed models, and saves it into `opencode.json`.
 
+## Settings (optional)
+
+These [settings](../settings/opencode.cli.json) are a good starting point: `permissions: autoaccept` makes sense if and only if the agent is sandboxed.
+
+```bash
+cp -vi /workspace/LocalGenie/data/settings/opencode.cli.json ~/.config/opencode/cli.json
+```
+
 # X. TODO
 
 - [x] hide external providers
@@ -321,7 +329,7 @@ The script [genie_choose_default_model](../scripts/genie_choose_default_model) p
 - [x] have an update method for opencode
 - [x] have an update method for ollama
 - [x] setting file ~/.config/opencode/cli.json is owned by root!
-- [ ] set verbose
+- [x] settings
 - [ ] maybe have opencode persist, same as ollama daemon, for faster restarts?
 - [ ] but then: how should it be started from personal WSL?
 - [ ] have small emacs in both AgentHost and opencode container, set it as EDITOR
