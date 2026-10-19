@@ -4,6 +4,8 @@ set -e
 
 CONFIG_FILE=~/.config/opencode/opencode.json
 
+mkdir -p $(dirname $CONFIG_FILE)
+
 curl -s http://localhost:11434/api/tags | jq '{
   "$schema": "https://opencode.ai/config.json",
   "disabled_providers": [

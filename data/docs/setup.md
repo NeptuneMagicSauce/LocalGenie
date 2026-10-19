@@ -320,9 +320,10 @@ The script [genie_choose_default_model](../scripts/genie_choose_default_model) p
   persist this: ~/.local/state/opencode
 - [x] have an update method for opencode
 - [x] have an update method for ollama
+- [x] setting file ~/.config/opencode/cli.json is owned by root!
+- [ ] set verbose
 - [ ] maybe have opencode persist, same as ollama daemon, for faster restarts?
 - [ ] but then: how should it be started from personal WSL?
-- [ ] set verbose
 - [ ] have small emacs in both AgentHost and opencode container, set it as EDITOR
 - [ ] customize context size per model
 - [ ] find a few models that fit in VRAM
