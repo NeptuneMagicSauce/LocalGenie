@@ -164,41 +164,10 @@ docker image rm $ID
 The inference server, installed in a docker container, in the `AgentHost` WSL:
 
 ```bash
-mkdir -p ~/ollama
-cd ~/ollama
-cat > docker-compose.yml << EOF
-services:
-  ollama:
-    image: ollama/ollama:latest
-    container_name: ollama
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_storage:/root/.ollama
-    environment:
-      # Fine-tune GPU and context memory parameters here
-      - OLLAMA_CONTEXT_LENGTH=65536
-      - OLLAMA_FLASH_ATTENTION=1
-      - OLLAMA_KV_CACHE_TYPE=q8_0
-      - OLLAMA_KEEP_ALIVE=24h
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-
-volumes:
-  ollama_storage:
-    name: ollama_storage
-EOF
-
-docker compose up -d
+genie_update_ollama
 ```
 
-It is now setup to be auto-started with the WSL instance, using systemd.
+This script [genie_update_ollama](../scripts/genie_update_ollama) updates Ollama if needed, and sets it up as an always running daemon.
 
 # 6. Start, Stop, release VRAM
 
@@ -349,8 +318,10 @@ The script [genie_choose_default_model](../scripts/genie_choose_default_model) p
 - [x] after registering models, prompt for default with fzf
 - [x] save favorite models, they are lost on container restart
   persist this: ~/.local/state/opencode
-- [x] have update methods for opencode
-- [ ] have update methods for ollama
+- [x] have an update method for opencode
+- [x] have an update method for ollama
+- [ ] maybe have opencode persist, same as ollama daemon, for faster restarts?
+- [ ] but then: how should it be started from personal WSL?
 - [ ] set verbose
 - [ ] have small emacs in both AgentHost and opencode container, set it as EDITOR
 - [ ] customize context size per model

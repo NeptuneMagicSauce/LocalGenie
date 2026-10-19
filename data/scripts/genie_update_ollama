@@ -1,0 +1,8 @@
+#!/bin/bash
+
+BASEDIR=$(dirname $0)
+cd $(realpath $BASEDIR/docker/ollama)
+
+docker compose pull   # check for updates
+docker compose up -d  # build the image
+docker image prune -f # prune old images
