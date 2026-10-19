@@ -1,0 +1,5 @@
+Find the root cause of this bug. Do not fix it.
+
+The bug occurrs seemingly at random. The user observes it occurrs about every 5 days. When it occurs, it stays in the bugged state until the software is restarted. What we observe after the bug has occurred: the e-mail daily report is not sent. When the user presses the "Logs" button, he is sent to the relevant submenu. This submenu is an instance of LogsWidget. The bug is that there is no data shown for the current day. All hour slots report zero grams, but it is incorrect, there is data, there are grams associated with hours.
+
+Because the bug has two observable incorrect behaviors, it may give us pointers for the investigation, it may be related to the log-data, or to the association with the day it relates to.
