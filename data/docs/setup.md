@@ -328,3 +328,5 @@ The script [genie_choose_default_model](../scripts/genie_choose_default_model) p
 - [ ] customize context size per model
 - [ ] find a few models that fit in VRAM
 - [ ] test the models with the prompt for the CatPi bug fix
+- [ ] a dashboard: GUI app in host, showing loads
+- [ ] hardening: try to escape the sandboxes
