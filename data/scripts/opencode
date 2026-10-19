@@ -1,13 +1,21 @@
 #!/bin/bash
 
+set -e
+
+DOCKER_ARGS=(
+    -it
+    --rm
+    --network=host
+    -v /workspace:/workspace
+)
+
 for dir in .config/opencode .local/state/opencode .local/share/opencode; do
     mkdir -p ~/$dir # otherwise docker creates the mount-binds as root!
-    MOUNTS+=" -v $(realpath ~/$dir):/home/user/$dir"
+    DOCKER_ARGS+=("-v" "$HOME/$dir:/home/user/$dir")
 done
 
-docker run -it --rm \
-       --network=host \
-       $MOUNTS \
-       -v /workspace:/workspace \
-       opencode-agent:debian \
-       $@
+if [ "$1" == "bash" ]; then
+    docker run "${DOCKER_ARGS[@]}" --entrypoint bash opencode-agent:debian
+else
+    docker run "${DOCKER_ARGS[@]}" opencode-agent:debian "$@"
+fi

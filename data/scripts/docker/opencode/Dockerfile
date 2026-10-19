@@ -26,7 +26,7 @@ ENV PATH="/home/user/.opencode/bin:${PATH}"
 
 WORKDIR /workspace
 
-CMD ["opencode"]
+ENTRYPOINT ["opencode"]
 
 ARG CACHE_BUST=1
 
