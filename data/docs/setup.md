@@ -291,6 +291,8 @@ cp -vi \
 - [x] setting file ~/.config/opencode/cli.json is owned by root!
 - [x] settings
 - [x] have small emacs in both AgentHost and opencode container, set it as EDITOR
+- [ ] zile is not great for editing prompts, no line-wrap: maybe emacs?
+- [ ] image show in terminal (opencode) fails: find reproduction and fix
 - [ ] maybe have opencode persist, same as ollama daemon, for faster restarts?
       but then: how should it be started from personal WSL?
 - [ ] customize context size per model
@@ -298,3 +300,4 @@ cp -vi \
 - [ ] test the models with the prompt for the CatPi bug fix
 - [ ] a dashboard: GUI app in host, showing loads
 - [ ] hardening: try to escape the sandboxes
+- [ ] rebuild my image processing filter with gemma
