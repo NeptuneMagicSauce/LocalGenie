@@ -16,13 +16,18 @@ RUN apt update && apt install -y --no-install-recommends \
     ripgrep \
     jq \
     git \
+    zile \
     ca-certificates
 
 RUN rm -rf /var/lib/apt/lists/*
 
+RUN update-alternatives --install /usr/bin/emacs emacs /usr/bin/zile 100
+
 USER user
 
 ENV PATH="/home/user/.opencode/bin:${PATH}"
+
+ENV EDITOR=emacs
 
 WORKDIR /workspace
 

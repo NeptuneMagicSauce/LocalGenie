@@ -25,7 +25,8 @@ EOF
 
 sudo passwd -d $USER # remove user password
 sudo apt update
-sudo apt install ca-certificates curl jq fzf
+sudo apt install ca-certificates curl jq fzf zile
+sudo update-alternatives --install /usr/bin/emacs emacs /usr/bin/zile 100
 
 wsl.exe --terminate AgentHost # reboot
 ```
@@ -289,9 +290,9 @@ cp -vi \
 - [x] have an update method for ollama
 - [x] setting file ~/.config/opencode/cli.json is owned by root!
 - [x] settings
+- [x] have small emacs in both AgentHost and opencode container, set it as EDITOR
 - [ ] maybe have opencode persist, same as ollama daemon, for faster restarts?
-- [ ] but then: how should it be started from personal WSL?
-- [ ] have small emacs in both AgentHost and opencode container, set it as EDITOR
+      but then: how should it be started from personal WSL?
 - [ ] customize context size per model
 - [ ] find a few models that fit in VRAM
 - [ ] test the models with the prompt for the CatPi bug fix
