@@ -29,6 +29,8 @@ ENV PATH="/home/user/.opencode/bin:${PATH}"
 
 ENV EDITOR=emacs
 
+ENV COLORTERM=truecolor
+
 WORKDIR /workspace
 
 ENTRYPOINT ["opencode"]
