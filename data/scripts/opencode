@@ -15,7 +15,8 @@ for dir in .config/opencode .local/state/opencode .local/share/opencode; do
 done
 
 if [ "$1" == "bash" ]; then
-    docker run "${DOCKER_ARGS[@]}" --entrypoint bash opencode-agent:debian
+    shift
+    docker run "${DOCKER_ARGS[@]}" --entrypoint bash opencode-agent:debian "$@"
 else
     docker run "${DOCKER_ARGS[@]}" opencode-agent:debian "$@"
 fi
