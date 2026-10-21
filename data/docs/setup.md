@@ -25,11 +25,11 @@ EOF
 
 sudo passwd -d $USER # remove user password
 sudo apt update
-sudo apt install ca-certificates curl jq fzf zile
-sudo update-alternatives --install /usr/bin/emacs emacs /usr/bin/zile 100
+sudo apt install ca-certificates curl jq fzf vim
 
 wsl.exe --terminate AgentHost # reboot
 ```
+
 
 # 2. Share a directory
 
@@ -222,7 +222,35 @@ ollama pull hf.co/unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:IQ4_XS
 ollama pull hf.co/unsloth/Qwen3.8-27B-GGUF:UD-IQ3_S
 ```
 
-# 8. OpenCode
+# 8. Text editor
+
+This portable build of `emacs` is 40 MB.
+
+```bash
+mkdir -p ~/tmp
+cd ~/tmp
+rm -fr EmacsPortableBuild
+git clone https://github.com/NeptuneMagicSauce/EmacsPortableBuild.git
+cd EmacsPortableBuild
+./data/build.sh
+sudo tar xzf data/emacs.tgz -C /usr
+cat >> ~/.profile << EOF
+export EDITOR=emacs
+EOF
+source ~/.profile
+```
+
+Alternative: `vim`. The choice will be propagated to the `OpenCode` container, for editing prompts.
+
+```bash
+cat >> ~/.profile << EOF
+export EDITOR=vim
+EOF
+source ~/.profile
+```
+
+
+# 9. OpenCode
 
 It is the agentic harness.
 

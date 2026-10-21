@@ -3,8 +3,18 @@
 BASEDIR=$(dirname $0)
 cd $(realpath $BASEDIR/docker/opencode)
 
+EMACS=~/tmp/EmacsPortableBuild/data/emacs.tgz
+if [ -f $EMACS ] ; then
+    cp $EMACS .
+else
+    touch $(basename $EMACS)
+fi
+
 docker build \
        --build-arg USER_ID=$(id -u) \
        --build-arg GROUP_ID=$(id -g) \
        --build-arg CACHE_BUST=$(date +%s) \
+       --build-arg EDITOR=$EDITOR \
        -t opencode-agent:debian .
+
+rm $(basename $EMACS)
