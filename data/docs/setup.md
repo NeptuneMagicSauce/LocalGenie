@@ -233,9 +233,10 @@ rm -fr EmacsPortableBuild
 git clone https://github.com/NeptuneMagicSauce/EmacsPortableBuild.git
 cd EmacsPortableBuild
 ./data/build.sh
+rm -fr data/output
 sudo tar xzf data/emacs.tgz -C /usr
 cat >> ~/.profile << EOF
-export EDITOR=emacs
+export EDITOR="emacs -l save.on.quit"
 EOF
 source ~/.profile
 ```
