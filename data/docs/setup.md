@@ -25,7 +25,7 @@ EOF
 
 sudo passwd -d $USER # remove user password
 sudo apt update
-sudo apt install ca-certificates curl jq fzf vim
+sudo apt install ca-certificates curl jq fzf vim ripgrep fd-find
 
 wsl.exe --terminate AgentHost # reboot
 ```
