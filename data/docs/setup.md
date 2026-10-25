@@ -11,14 +11,19 @@ wsl.exe --install -d Debian --name AgentHost
 wsl.exe -d AgentHost
 ```
 
-Remove its auto-mounts, make sure it has systemd in `/etc/wsl.conf`:
+Remove its auto-mounts to enable `systemd` and disable interoperability.
 
 ```bash
 sudo tee /etc/wsl.conf <<EOF
 [boot]
 systemd=true
 
+[interop]
+enabled=false
+appendWindowsPath=false
+
 [automount]
+root = /
 enabled = false
 mountFsTab = false
 EOF
@@ -41,14 +46,14 @@ Root cause: auto-mount fstab runs before `/wsl` is ready.
 
 Let's not use systemd because its syntax is too verbose.
 
-We will use `.bashrc` or `.bash_local` or `.profile`, choose what works for you.
+We will use `.profile` or `.bashrc` or `.bash_local`, choose what works for you.
 
 ## In the host: personal WSL
 
 ```bash
-WORKSPACE=~/workspace/WorkspaceForAgents/
+RCFILE=~/.profile # customize here
+WORKSPACE=~/workspace/WorkspaceForAgents/ # customize here
 DEST=/wsl/WorkspaceForAgents
-RCFILE=~/.bashrc # customize here
 
 mkdir -p $WORKSPACE
 mkdir -p $DEST
@@ -65,6 +70,8 @@ source $RCFILE
 ```
 
 ## In the AgentHost WSL
+
+### Mount the shared directory
 
 
 ```bash

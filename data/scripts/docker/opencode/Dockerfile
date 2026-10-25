@@ -29,6 +29,7 @@ ENV COLORTERM=truecolor
 
 COPY emacs.tgz /
 RUN tar zxf /emacs.tgz -C /usr
+RUN rm /emacs.tgz
 
 USER user
 
